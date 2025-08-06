@@ -1,0 +1,25 @@
+
+# config.yaml
+data_name: 'synthetic_intersectional_discri'
+datapath: "./synthetic_data/intersectional_discri_tg10000.csv"
+remove_outliers: False
+testsize: 0.3
+seed: 42 # provide a list for several seeds
+num_sens: 2 #S
+num_covariates:  3 #
+num_treatments: 2 # Z
+num_outcomes: 1 # Y
+threshold: 0.5
+discrimination_coeff: True 
+treatment_col:   ['LoanAmount','Duration']
+disadvantaged_group: 'Male'
+use_dataset: 'all' # estimate the noise either using the test data or train
+model_interactions: True 
+plot_cov: False
+perform_significance_test: False  # Set to True when you want to run significance testing
+counterfactual_implementation:
+  type: 'full' # 'full'or  
+  one_flip_sensitive_column: 'Gender'
+ # Specify the sensitive column for one_flip
+counterfactual_estimation: False
+

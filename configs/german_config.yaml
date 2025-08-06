@@ -1,0 +1,26 @@
+# config.yaml
+data_name: 'german'
+datapath: "./synthetic_data/updated_german.csv"
+remove_outliers: False
+testsize: 0.3
+seed: 42 
+num_sens: 2 # S
+num_covariates: 16 # X
+num_treatments: 2 # Z
+num_outcomes: 1 # Y
+threshold: 0.5
+discrimination_coeff: True 
+treatment_col: ["duration", "credit_amount"]
+disadvantaged_group: 'Male'
+use_dataset:  'all'
+model_interactions: = True 
+plot_cov: False
+perform_significance_test: False  # Set to True when you want to run significance testing
+# counterfactual_implementation_type: 'full' # newly added 
+counterfactual_implementation:
+  type: 'one_flip' # 'full'or  # 'one_flip'
+  one_flip_sensitive_column: 'gender' # Specify the sensitive column for one_flip
+counterfactual_estimation: False
+
+
+
