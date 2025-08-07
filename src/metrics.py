@@ -14,7 +14,6 @@ def compute_demographic_parity_ratio(df, sensitive_attributes, outcome_col):
     if not subgroup_rates:
         raise ValueError("No subgroups found.")
     rates = list(subgroup_rates.values())
-    # print(f"Subgroup rates: {rates}")
     dpr = 1- (np.min(rates) / np.max(rates)) if np.max(rates) > 0 else None
     return subgroup_rates, dpr
 
@@ -286,154 +285,10 @@ def compute_tpr_disparity(df, sensitive_attributes, outcome_col, predictions):
     return epsilon_tprs, subgroup_tprs
 
 
-def compute_idd_metric(df, outcome_col, sensitive_attributes, mode=None):
-    """
-    Computes decomposed disparities: total, additive, and intersectional disparity.
-    Allows switching between two intersectional definitions: 'old' (inclusion-exclusion)
-    or 'new' (pure interaction term).
-
-    Parameters:
-    df (pd.DataFrame): Input data.
-    outcome_col (str): Name of the binary outcome column.
-    sensitive_attributes (list): List of sensitive attributes, e.g., ['Gender', 'Race'].
-    which (str): 'old' or 'new' — chooses which intersectional metric to use.
-
-    Returns:
-    tuple: total_disparity, additive_disparity, intersectional_disparity
-    """
-    if len(sensitive_attributes) != 2:
-        raise ValueError("This implementation supports exactly two sensitive attributes.")
-
-    A1, A2 = sensitive_attributes
-
-    # Base & marginal probabilities
-    p_y = df[outcome_col].mean()
-    p_y_a1 = df[df[A1] == 1][outcome_col].mean()
-    p_y_a2 = df[df[A2] == 1][outcome_col].mean()
-
-    # Joint group probabilities
-    p_11 = df[(df[A1] == 1) & (df[A2] == 1)][outcome_col].mean()
-    p_10 = df[(df[A1] == 1) & (df[A2] == 0)][outcome_col].mean()
-    p_01 = df[(df[A1] == 0) & (df[A2] == 1)][outcome_col].mean()
-    p_00 = df[(df[A1] == 0) & (df[A2] == 0)][outcome_col].mean()
-
-    # Total disparity
-    worst_disparity = np.abs(p_11 - p_00)
-
-    # Additive disparity
-    delta_g = p_y_a1 - p_y
-    delta_r = p_y_a2 - p_y
-    additive_disparity = (abs(delta_g) + abs(delta_r)) 
-    # additive_disparity = (abs(delta_g) + abs(delta_r)) / 2
-
-    # Intersectional disparity
-    # inter_old = np.abs(p_11 - (p_y_a1 + p_y_a2 - p_y))
-    # intersectional_disparity = inter_old
-
-    inter_new = np.abs(p_11 - p_10 - p_01 + p_00)  # sames as AIES
-    
-    intersectional_disparity = inter_new
-    
-
-    return worst_disparity, additive_disparity, intersectional_disparity
 
 
 
-
-
-
-# def compute_idd_metric(df, outcome_col, sensitive_attributes, mode=None):
-#     """
-#     Computes decomposed disparities using pure interaction-based definition
-#     assuming binary sensitive attributes.
-
-#     Parameters:
-#     df (pd.DataFrame): Input data.
-#     outcome_col (str): Name of the binary outcome column.
-#     sensitive_attributes (list): List of sensitive attributes, e.g., ['Gender', 'Race'].
-
-#     Returns:
-#     tuple: total_disparity, additive_disparity, intersectional_disparity
-#     """
-#     if len(sensitive_attributes) != 2:
-#         raise ValueError("This implementation supports exactly two sensitive attributes.")
-
-#     A1, A2 = sensitive_attributes
-
-#     # Base probabilities
-#     p_y = df[outcome_col].mean()  # P(Y=1)
-#     p_y_a1 = df[df[A1] == 1][outcome_col].mean()  # P(Y=1 | A1=1)
-#     p_y_a2 = df[df[A2] == 1][outcome_col].mean()  # P(Y=1 | A2=1)
-
-#     # Joint probabilities
-#     p_11 = df[(df[A1] == 1) & (df[A2] == 1)][outcome_col].mean()  # P(Y=1 | A1=1, A2=1)
-#     p_10 = df[(df[A1] == 1) & (df[A2] == 0)][outcome_col].mean()  # P(Y=1 | A1=1, A2=0)
-#     p_01 = df[(df[A1] == 0) & (df[A2] == 1)][outcome_col].mean()  # P(Y=1 | A1=0, A2=1)
-#     p_00 = df[(df[A1] == 0) & (df[A2] == 0)][outcome_col].mean()  # P(Y=1 | A1=0, A2=0)
-
-#     # Total disparity between most and least privileged
-#     worst_disparity = np.abs(p_11 - p_00)
-
-#     # Additive (single-axis) disparity
-#     delta_g = p_y_a1 - p_y
-#     delta_r = p_y_a2 - p_y
-#     print(f"delta_g: {delta_g}, delta_r: {delta_r}")
-#     additive_disparity = (abs(delta_g) + abs(delta_r)) / 2
-
-#     # Pure interaction-based intersectional disparity
-#     intersectional_disparity = np.abs(p_11 - p_10 - p_01 + p_00)
-
-#     return worst_disparity, additive_disparity, intersectional_disparity
-
-
-
-
-
-
-
-# def compute_idd_metric_old(df, outcome_col, sensitive_attributes, mode=None):
-#     # venn diagram of intersectionality
-#     """
-#     Computes decomposed disparities using inclusion-exclusion logic assuming binary sensitive attributes.
-    
-#     Parameters:
-#     df (pd.DataFrame): Input data.
-#     outcome_col (str): Name of the binary outcome column.
-#     sensitive_attributes (list): List of sensitive attributes, e.g., ['Gender', 'Race'].
-    
-#     Returns:
-#     tuple: total_disparity, additive_disparity, intersectional_disparity
-#     """
-#     if len(sensitive_attributes) != 2:
-#         raise ValueError("This implementation supports exactly two sensitive attributes.")
-    
-#     A1, A2 = sensitive_attributes
-#     p_y = df[outcome_col].mean()  # P(Y=1)
-#     p_y_a1 = df[df[A1] == 1][outcome_col].mean()  # P(Y=1 | A1=1)
-#     p_y_a2 = df[df[A2] == 1][outcome_col].mean()  # P(Y=1 | A2=1)
-#     p_y_a1_a2 = df[(df[A1] == 1) & (df[A2] == 1)][outcome_col].mean()  # P(Y=1 | A1=1, A2=1)
-#     p_y_not_a1_not_a2 = df[(df[A1] == 0) & (df[A2] == 0)][outcome_col].mean()  # P(Y=1 | A1=0, A2=0)
-
-#     # Total disparity between most and least privileged
-#     worst_disparity = np.abs(p_y_a1_a2 - p_y_not_a1_not_a2)
-    
-#     delta_g = p_y_a1 - p_y
-#     delta_r = p_y_a2 - p_y
-#     print(f"delta_g: {delta_g}, delta_r: {delta_r}")
-#     additive_disparity = (abs(delta_g) + abs(delta_r)) / 2
-
-#     # Intersectional disparity 
-#     intersectional_disparity = np.abs(p_y_a1_a2 - (p_y_a1 + p_y_a2 - p_y))
-
-#     return worst_disparity, additive_disparity, intersectional_disparity
-
-
-
-
-    
-
-
-def evaluation_data(df, sensitive_attributes, outcome_col, mode):
+def evaluation_data(df, sensitive_attributes, outcome_col):
     eval_subgroup_rates = {}
     metrics_results = {}
     
@@ -452,16 +307,10 @@ def evaluation_data(df, sensitive_attributes, outcome_col, mode):
     subgroup_unfairness, subgroup_rates= compute_subgroup_unfairness(df, sensitive_attributes, outcome_col)
     metrics_results['subgroup_unfairness'] = subgroup_unfairness
     eval_subgroup_rates['subgroup_unfairness'] = subgroup_rates
-    
-    D_worst_disparity, D_additive, D_intersectional = compute_idd_metric(df, outcome_col, sensitive_attributes, mode)
-    # print(f"what is the value of D_subgroups: {D_subgroups}, D_additive: {D_additive}, D_intersectional: {D_intersectional}")
-    metrics_results['idd_intersectional'] = D_intersectional
-    metrics_results['idd_worst_disparity'] = D_worst_disparity
-    metrics_results['idd_additive'] = D_additive
-    
+
     return metrics_results, eval_subgroup_rates
     
-def evaluation_classifier(df, sensitive_attributes, outcome_col, prediction_col, mode):
+def evaluation_classifier(df, sensitive_attributes, outcome_col, prediction_col):
     eval_subgroup_rates = {}
     metrics_results = {}
     
@@ -502,13 +351,7 @@ def evaluation_classifier(df, sensitive_attributes, outcome_col, prediction_col,
     subgroup_unfairness, subgroup_rates= compute_subgroup_unfairness(df, sensitive_attributes, prediction_col)
     metrics_results['subgroup_unfairness'] = subgroup_unfairness
     eval_subgroup_rates['subgroup_unfairness'] = subgroup_rates
-    
-    
-    D_worst_disparity, D_additive, D_intersectional = compute_idd_metric(df, prediction_col, sensitive_attributes, mode)
-    # print(f"what is the value of D_subgroups: {D_subgroups}, D_additive: {D_additive}, D_intersectional: {D_intersectional}")
-    metrics_results['idd_intersectional'] = D_intersectional
-    metrics_results['idd_worst_disparity'] = D_worst_disparity
-    metrics_results['idd_additive'] = D_additive
+
     return metrics_results, eval_subgroup_rates
 
 

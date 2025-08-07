@@ -1,13 +1,10 @@
-   
-import matplotlib.pyplot as plt
-from matplotlib.cm import get_cmap
-from matplotlib import cm
-
+import os
 import numpy as np
 import pandas as pd
 import seaborn as sns   
-import os
-
+import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
+from matplotlib import cm
 from tueplots import bundles
 bundles.aaai2024()
 plt.rcParams.update(bundles.aaai2024())
@@ -21,28 +18,9 @@ sns.set_context("paper", font_scale=1.6)
 pd.set_option('display.max_columns', 10)
 pd.set_option("display.precision", 5)
  
-# sns.set_style("whitegrid")  
-# sns.set_context("paper", font_scale=1.3)
-
  
-# def plot_features(data):     
-#     rows = 2
-#     cols = 4
-#     names_cols = ['Gender','Race','Education','Income','Savings','LoanAmount','Duration', 'Y']
-
-#     fig, axes = plt.subplots(rows, cols, figsize=(15, 8))
-#     axes = axes.flatten()
-#     for i, col in enumerate(names_cols):
-#         axes[i].hist(data[col])  
-#         axes[i].set_xlabel(col)
-#         axes[i].set_title(f"Distribution of {col}")
-
-#     for j in range(len(names_cols), len(axes)):
-#         fig.delaxes(axes[j])
-
-#     plt.tight_layout()
-#     plt.show()
-    
+ 
+ 
 def correlation_matrix(data):
     plt.figure(figsize=(10, 6))
     sns.heatmap(data.corr(), annot=True, cmap='coolwarm')
@@ -94,8 +72,6 @@ def thresholding(results_summary, group_by=None, data_name=None):
     
     plt.xlabel(group_col, fontsize=fontsize)
     plt.ylabel(f" Base on Outcome.", fontsize=fontsize)
-    # plt.title(f" Thresholds for Outcome.", fontsize=fontsize)
-    # plt.title(f"Average Threshold by {group_col}")
     plt.xticks(rotation=45, fontsize=fontsize)
     plt.tight_layout()
     
@@ -116,9 +92,7 @@ def visualize_histograms(data, data_name = None,  measure_bias_col=None, plot_in
     """
     data = data.copy()  # Avoid modifying original DataFrame
     data['IntersectionalGroup'] = data['Gender'].astype(str) + "_" + data['Race'].astype(str)
-    
-    # measure_bias_col = 'IntersectionalGroup'
-    
+        
     if plot_intersectional :
         measure_bias_col = 'IntersectionalGroup'
     else:
@@ -145,8 +119,7 @@ def visualize_histograms(data, data_name = None,  measure_bias_col=None, plot_in
     axes[5].axis('off')
     
     fig.tight_layout()
-    # fig.suptitle(f"Histogram of {data_name} dataset", fontsize=18, y=1.02)
-    # plt.show()
+    
     fontsize = 24
     group_labels = sorted(data[measure_bias_col].unique())
     color_map = get_color_mapping(group_labels)
@@ -166,7 +139,7 @@ def visualize_histograms(data, data_name = None,  measure_bias_col=None, plot_in
 
 
 
-def plot_metrics(results, output_file='intersectional_fairness_metrics.pdf', data_type='Generated Data', dpi=800, scaling_method=None):
+def plot_metrics(results, output_file='../images/intersectional_fairness_metrics.pdf', data_type='Generated Data', dpi=800, scaling_method=None):
     """
     Plots metrics as horizontal bar plots with high resolution and clear labels for Overleaf.
     """
@@ -219,7 +192,7 @@ def plot_metrics(results, output_file='intersectional_fairness_metrics.pdf', dat
 
 
 
-def plot_grouped_metrics(results, title='Intersectional Unfairness Metrics for ', output_file='intersectional_fairness_classifier_on_classifier.pdf',
+def plot_grouped_metrics(results, title='Intersectional Unfairness Metrics for ', output_file='../images/intersectional_fairness_classifier_on_classifier.pdf',
                          data_type='Classifier Predictions', dpi=800, scaling_method=None):
     """
     Plots grouped metrics as horizontal bar plots with high resolution and clear labels for Overleaf.
@@ -313,63 +286,3 @@ def plot_idd_decomposition(results):
     plt.show()
 
 
-
-
-
-
-
-
-# def plot_grouped_metrics(results, title='Intersectional Unfairness Metrics for ', output_file='intersectional_fairness_classifier_on_classifier.pdf',
-#                          data_type='Classifier Predictions', dpi=800, scaling_method=None):
-#     """
-#     Plots grouped metrics with high resolution and clear labels for Overleaf.
-#     """
-#     # Convert results to DataFrame
-#     df = pd.DataFrame(results)
-#     metrics = df.columns.tolist()
-#     datasets = df.index.tolist()
-#     n_metrics = len(metrics)
-#     n_datasets = len(datasets)
-#     width = 0.08  # width of each bar
-#     group_spacing = 0.3  # extra spacing between dataset groups
-#     total_width = n_metrics * width + group_spacing
-#     x = np.arange(n_datasets) * total_width
-
-#     # Color mapping
-#     cmap = cm.get_cmap('viridis', n_metrics)
-#     colors = [cmap(i) for i in range(n_metrics)]
-
-#     # Create the plot
-#     fig, ax = plt.subplots(figsize=(12, 8))  # Larger figure size for clarity
-#     # fig, ax = plt.subplots(figsize=(16, 16))
-
-#     for i, metric in enumerate(metrics):
-#         offsets = x + i * width
-#         ax.bar(offsets, df[metric], width=width, label=metric.replace("_", " ").title(), color=colors[i], edgecolor='black')
-
-#     # Set x-axis ticks and labels
-#     ax.set_xticks(x + (n_metrics - 1) * width / 2)
-#     ax.set_xticklabels(datasets, rotation=45, ha='right', fontsize=20)
-
-#     # Set axis labels and title
-#     ax.set_xlabel('Datasets', fontsize=26, labelpad=15)
-#     if scaling_method:
-#         ax.set_ylabel(f'{scaling_method} Scaled Values', fontsize=26, labelpad=15)
-#     else:
-#         ax.set_ylabel('Unscaled Values', fontsize=28, labelpad=15)
-#     # Set y-axis tick labels
-#     ax.tick_params(axis='y', labelsize=30)
-#     ax.tick_params(axis='x', labelsize=30)
-
-#     # Add legend
-    
-#     ax.legend(title="Intersectional Metrics", ncols=2,  fontsize=26, title_fontsize=26, loc='upper left', frameon=True)
-
-#     # Add gridlines
-#     ax.grid(True, linestyle='--', axis='y', alpha=0.6)
-
-#     # Adjust layout and save the plot
-#     plt.tight_layout()
-#     plt.savefig(output_file, dpi=dpi, bbox_inches='tight')  # Ensure no clipping
-#     plt.show()
-#     # plt.close(fig)  # Close the figure to free memory

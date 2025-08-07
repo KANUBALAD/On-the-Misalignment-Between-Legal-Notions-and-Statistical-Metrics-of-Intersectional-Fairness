@@ -3,7 +3,7 @@ import pandas as pd
 import yaml
 import itertools
 from preprocess import preprocess_sensitive_data
-from src.data_loader import DataLoader
+from data_loader import DataLoader
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 

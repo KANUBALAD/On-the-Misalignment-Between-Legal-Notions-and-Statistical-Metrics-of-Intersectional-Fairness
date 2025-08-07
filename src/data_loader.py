@@ -2,7 +2,7 @@
 
 # import pandas as pd
 # import numpy as np
-import src.data_loading as data_loading
+import data_loading as data_loading
 from preprocess import preprocess_XZ  
 from sklearn.model_selection import train_test_split
 

@@ -1,18 +1,14 @@
-
-
-# On the Misalignment Between Legal Notions and Statistical Metrics of Intersectional Fairness
-
 Welcome to the official repository for our AIES 2025 paper: **On the Misalignment Between Legal Notions and Statistical Metrics of Intersectional Fairness**.
 
 ## Abstract
+This paper examines whether current statistical metrics for intersectional fairness truly capture the non-additive discrimination emphasized in legal and social theory. Using controlled synthetic data, we isolate single-axis, additive, and interaction-based biases. We find that existing metrics respond more to additive disparities than to uniquely intersectional effects, revealing a misalignment with the theoretical foundations of intersectionality. We call for fairness metrics that explicitly account for structural, non-additive harms.
 
-Intersectional (un)fairness, as conceptualized in legal and social theory, emphasizes the non-additive and structurally complex nature of discrimination against individuals at the intersection of multiple sensitive attributes (such as race, gender, etc). Recent works have proposed statistical metrics for intersectional fairness by estimating disparities across groups of individuals sharing two or more sensitive attributes. However, it is unclear if these metrics detect uniquely intersectional discrimination. We therefore pose the following question, Do current statistical intersectional metrics detect the non-additive discrimination highlighted by intersectionality theory? More specifically, to answer this, we run controlled synthetic data experiments that explicitly allow us to control for single, multiple, intersectional, and compounded forms of discrimination. Our analyses show that current statistical metrics for intersectional fairness behave more like multi-attribute disparity measures. Specifically, they respond more strongly to additive or compounded biases than to non-additive interaction effects. While they effectively capture disparities across multiple sensitive attributes, they often fail to detect uniquely intersectional discrimination. These findings reveal a fundamental misalignment between existing intersectional fairness metrics and the legal and theoretical foundations of intersectionality. We argue that if intersectional fairness metrics are to be deemed truly intersectional, they must be explicitly designed to account for the structural, non-additive nature of intersectional discrimination.
-
-## Contents
+## 🗂️ Repository Structure
 
 - `src/` — Source code for experiments and analyses
 - `notebooks/` — Interactive Jupyter notebooks for reproducing results
-- `results/` — Outputs and figures from our experiments
+- `generated_data/` — Generated data from our experiments
+- `images/` -  Figures from our experiments
 
 ## Getting Started
 
@@ -30,23 +26,59 @@ Intersectional (un)fairness, as conceptualized in legal and social theory, empha
 3. **Run experiments:**
     See instructions in the `notebooks/` directory for step-by-step guides.
 
-## Citation
+
+## 📊 Key Experiments and Results
+
+The repository implements five key discrimination scenarios:
+
+1. **No Bias**: Baseline with no discrimination
+2. **Single-Axis Bias**: Discrimination against one protected attribute (e.g., gender only)
+3. **Multiple Bias**: Additive discrimination against multiple attributes
+4. **Intersectional Bias**: Non-additive interaction effects between attributes
+5. **Compounded Bias**: Complex combination of all discrimination types
+
+### Implemented Fairness Metrics
+
+- **Demographic Parity Ratio (DPR)**
+- **ε-lift (elift)**: Multiplicative fairness metric
+- **s-lift (slift)**: Additive fairness metric  
+- **Subgroup Unfairness**: Maximum disparity across intersectional subgroups
+
+
+## 📚 Citation
 
 If you use this code or data in your research, please cite our paper:
 
-```
-@inproceedings{kanubala2025aies,
+```bibtex
+@inproceedings{kanubala2025intersectional,
   title={On the Misalignment Between Legal Notions and Statistical Metrics of Intersectional Fairness},
-  author={Deborah D. Kanubala, Isabel Valera},
-  booktitle={AIES 2025},
-  year={2025}
+  author={Kanubala, Deborah D. and Valera, Isabel},
+  booktitle={Proceedings of the 2025 AAAI/ACM Conference on AI, Ethics, and Society (AIES)},
+  year={2025},
+  organization={ACM}
 }
 ```
 
-## License
 
-This project is licensed under the MIT License.
+## 🤝 Contributing
 
-## Contact
-For questions or collaborations, please contact: [kanubala@cs.uni-saarland.de](mailto:kanubala@cs.uni-saarland.de).
+We welcome contributions! Please feel free to:
 
+1. Report bugs or issues
+2. Suggest improvements
+3. Submit pull requests
+4. Ask questions about the implementation
+
+## 📞 Contact
+
+For questions, collaborations, or support:
+
+- **Deborah D. Kanubala**: [kanubala@cs.uni-saarland.de](mailto:kanubala@cs.uni-saarland.de)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Note**: This research was conducted at Saarland University and represents work accepted at AIES 2025. The code is provided for reproducibility and to support further research in intersectional fairness.
