@@ -11,6 +11,7 @@ import os
 from tueplots import bundles
 bundles.aaai2024()
 plt.rcParams.update(bundles.aaai2024())
+
 # Increase the resolution of all the plots below
 plt.rcParams.update({"figure.dpi": 800})
 
@@ -98,7 +99,7 @@ def thresholding(results_summary, group_by=None, data_name=None):
     plt.xticks(rotation=45, fontsize=fontsize)
     plt.tight_layout()
     
-    save_path = os.path.join('./output_data', f"{data_name}.pdf")
+    save_path = os.path.join('../images', f"{data_name}.pdf")
     plt.savefig(save_path, format="pdf", dpi=800)
     plt.show()
 
@@ -159,7 +160,7 @@ def visualize_histograms(data, data_name = None,  measure_bias_col=None, plot_in
     plt.yticks(fontsize=fontsize)
     plt.tight_layout()
     
-    save_path = os.path.join('./output_data', f"ycounts_{data_name}.pdf")
+    save_path = os.path.join('../images', f"ycounts_{data_name}.pdf")
     plt.savefig(save_path, format="pdf", dpi=800)
     plt.show()
 
