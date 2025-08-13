@@ -1,31 +1,25 @@
 import os
+import sys
+import seaborn as sns
 import numpy as np
-import pandas as pd
-import seaborn as sns   
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from matplotlib.cm import get_cmap
-from matplotlib import cm
-from tueplots import bundles
-bundles.aaai2024()
-plt.rcParams.update(bundles.aaai2024())
+sys.path.append(os.path.join('..', 'src'))
+from helper import standardize_across_metrics, standardize_metrics_adaptive,standardize_within_metrics, discrimination_y, discrimination_treatment
 
-# Increase the resolution of all the plots below
-plt.rcParams.update({"figure.dpi": 800})
 
-sns.set_style("whitegrid")  
-sns.set_context("paper", font_scale=1.6)
 
-pd.set_option('display.max_columns', 10)
-pd.set_option("display.precision", 5)
- 
- 
- 
- 
-def correlation_matrix(data):
-    plt.figure(figsize=(10, 6))
-    sns.heatmap(data.corr(), annot=True, cmap='coolwarm')
+
+def plot_measure_discrimination(data, measure_bias_col, data_name = None, outcome_col='Y', plot=False, plot_intersectional=True):
+    if plot:
+        # plots.plot_features(data)
+        visualize_histograms(data, data_name = data_name, measure_bias_col=measure_bias_col, plot_intersectional=plot_intersectional)
+        # plots.correlation_matrix(data)
+    discrimination_y(data, outcome_col)
+    discrimination_treatment(data, measure_bias_col)
     
-    
+
 def get_color_mapping(unique_groups, cmap_name="viridis"):
     """
     Given a list of group names, return a consistent color mapping (dict).
@@ -34,52 +28,6 @@ def get_color_mapping(unique_groups, cmap_name="viridis"):
     cmap = get_cmap(cmap_name)
     colors = [cmap(i / len(unique_groups)) for i in range(len(unique_groups))]
     return dict(zip(unique_groups, colors))
-    
-
-def thresholding(results_summary, group_by=None, data_name=None):
-    """
-    Plots and returns average thresholds by either intersectional groups (e.g., Gender_Race)
-    or a single sensitive attribute.
-
-    Parameters:
-    - results_summary: dict with 'data_df' and 'thresholds'
-    - plot_intersection: bool, if True uses intersection of Gender and Race
-    - group_by: str, optional column name to group by (e.g., 'Gender', 'Race')
-
-    Returns:
-    - DataFrame with average threshold per group
-    """
-    data_csv = results_summary['data_df'].copy()
-    thresholds = results_summary['thresholds']
-    data_csv['threshold'] = thresholds
-    if group_by is None:
-        data_csv['IntersectionalGroup'] = data_csv['Gender'].astype(str) + "_" + data_csv['Race'].astype(str)
-        group_col = 'IntersectionalGroup'
-    else:
-        group_col = group_by
-        
-    grouped = data_csv.groupby(group_col)['threshold'].mean().reset_index()
-
-    group_labels = sorted(data_csv[group_col].unique())
-    color_map = get_color_mapping(group_labels)
-    fontsize = 24
-    # Match bar colors by group order
-    bar_colors = [color_map[g] for g in grouped[group_col]]
-
-    plt.figure(figsize=(8, 4))
-    plt.bar(grouped[group_col], grouped['threshold'], color=bar_colors, edgecolor="black")
-
-    
-    plt.xlabel(group_col, fontsize=fontsize)
-    plt.ylabel(f" Base on Outcome.", fontsize=fontsize)
-    plt.xticks(rotation=45, fontsize=fontsize)
-    plt.tight_layout()
-    
-    save_path = os.path.join('../images', f"{data_name}.pdf")
-    plt.savefig(save_path, format="pdf", dpi=800)
-    plt.show()
-
-
     
 
 
@@ -139,150 +87,100 @@ def visualize_histograms(data, data_name = None,  measure_bias_col=None, plot_in
 
 
 
-def plot_metrics(results, output_file='../images/intersectional_fairness_metrics.pdf', data_type='Generated Data', dpi=800, scaling_method=None):
+def plot_metrics_from_summary(results_summary, output_file, 
+                             data_type='Generated Data', dpi=800, 
+                             scalar_type=None, metrics_to_scale=None, 
+                             apply_scaling=True, force_scaling_type=None):
     """
-    Plots metrics as horizontal bar plots with high resolution and clear labels for Overleaf.
+    Plots metrics with adaptive standardization based on single/multi-seed detection.
+    
+    Parameters:
+    - results_summary: Summary DataFrame
+    - output_file: Path to save plot
+    - data_type: Type of data for labels
+    - dpi: Plot resolution
+    - scalar_type: 'MinMax', 'Zscore', 'Robust'
+    - metrics_to_scale: List of metrics to scale (None = all)
+    - apply_scaling: Whether to apply scaling
+    - force_scaling_type: 'across' or 'within' to override automatic detection
     """
-    # Convert results to DataFrame
-    if scaling_method:
-        df = pd.DataFrame(results)
+    
+    # Apply scaling if requested
+    if apply_scaling and scalar_type:
+        if force_scaling_type == 'across':
+            plot_data = standardize_across_metrics(results_summary, scalar_type, metrics_to_scale)
+            scaling_info = f"{scalar_type} (Cross-Metric)"
+        elif force_scaling_type == 'within':
+            plot_data = standardize_within_metrics(results_summary, scalar_type, metrics_to_scale)
+            scaling_info = f"{scalar_type} (Within-Metric)"
+        else:
+            # Adaptive scaling
+            plot_data = standardize_metrics_adaptive(results_summary, scalar_type, metrics_to_scale)
+            is_single_seed = all(results_summary['count'] == 1)
+            scaling_info = f"{scalar_type} ({'Cross-Metric' if is_single_seed else 'Within-Metric'})"
     else:
-        df = pd.DataFrame(results).T
-    metrics = df.columns  # Metric names
-    datasets = df.index  # Dataset names
-    y = np.arange(len(datasets))  # Y-axis positions for datasets
-    height = 0.10  # Height of each bar
-    cmap = cm.get_cmap('viridis', len(metrics))  # Colormap
-    colors = [cmap(i) for i in range(len(metrics))]
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(12, 8))  # Larger figure size for clarity
+        plot_data = results_summary.copy()
+        scaling_info = None
+    
+    # Pivot the summary DataFrame
+    df = plot_data.pivot(index='scenario', columns='metric', values='mean')
+    
+    desired_order = ['no_bias', 'single', 'multiple', 'intersectional', 'compounded']
+    available_scenarios = df.index.tolist()
+    ordered_scenarios = [scenario for scenario in desired_order if scenario in available_scenarios]
+    df = df.reindex(ordered_scenarios)
 
+    # Get metrics and scenarios
+    metrics = df.columns
+    datasets = df.index
+    
+    # Set up plot parameters
+    y = np.arange(len(datasets))
+    height = 0.10
+    cmap = cm.get_cmap('viridis', len(metrics))
+    colors = [cmap(i) for i in range(len(metrics))]
+    
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Plot bars
     for i, metric in enumerate(metrics):
         ax.barh(y + i * height, df[metric], height, label=metric, color=colors[i], edgecolor='black')
+    
+    # Formatting
     label_fontsize = 26
-    # Add labels, title, and legend
-    ax.set_ylabel('Datasets', fontsize=label_fontsize, labelpad=15)  # Larger font size and padding
-    if scaling_method:
-        ax.set_xlabel(f'{scaling_method} Scaled Values', fontsize=26, labelpad=15)
+    ax.set_ylabel('Datasets', fontsize=label_fontsize, labelpad=15)
+    
+    if scaling_info:
+        ax.set_xlabel(f'{scaling_info} Values', fontsize=24, labelpad=15)
     else:
         ax.set_xlabel('Unscaled Values', fontsize=24, labelpad=15)
         
     ax.set_yticks(y + height * (len(metrics) - 1) / 2)
     ax.set_yticklabels(datasets, fontsize=label_fontsize)
     
-    xtick_positions = np.arange(0, 1.1, 0.2)
+    # Set x-axis ticks
+    max_val = df.max().max()
+    min_val = df.min().min()
+    
+    if scaling_info and scalar_type == 'MinMax':
+        xtick_positions = np.arange(0, 1.1, 0.2)
+    else:
+        range_val = max_val - min_val
+        tick_spacing = max(0.1, range_val / 5)
+        xtick_positions = np.arange(min_val, max_val + tick_spacing, tick_spacing)
+    
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels([f'{x:.1f}' for x in xtick_positions], fontsize=label_fontsize)
     ax.tick_params(axis='x', labelsize=26)
     ax.tick_params(axis='y', labelsize=26)
     
     ax.legend(fontsize=20, title_fontsize=22, loc='lower right', frameon=True)
-    
-    # ax.legend(title="Intersectional Metrics", fontsize=20, title_fontsize=22, loc='lower right', frameon=True)
-
     ax.grid(True, linestyle='--', axis='x', alpha=0.6)
 
-    # Adjust layout and save the plot
     plt.tight_layout()
-    plt.savefig(output_file, dpi=dpi, bbox_inches='tight')  # Ensure no clipping
+    plt.savefig(output_file, dpi=dpi, bbox_inches='tight')
     plt.show()
-    # plt.close(fig)  # Close the figure to free memory
-
-
-
-
-
-def plot_grouped_metrics(results, title='Intersectional Unfairness Metrics for ', output_file='../images/intersectional_fairness_classifier_on_classifier.pdf',
-                         data_type='Classifier Predictions', dpi=800, scaling_method=None):
-    """
-    Plots grouped metrics as horizontal bar plots with high resolution and clear labels for Overleaf.
-    """
-    # Convert results to DataFrame
-    df = pd.DataFrame(results)
-    metrics = df.columns.tolist()
-    datasets = df.index.tolist()
-    n_metrics = len(metrics)
-    n_datasets = len(datasets)
-
-    # Bar settings
-    height = 0.08 # height of each bar
-    group_spacing = 0.3  # extra spacing between dataset groups
-    total_height = n_metrics * height + group_spacing
-    y = np.arange(n_datasets) * total_height
-
-    # Color mapping
-    cmap = cm.get_cmap('viridis', n_metrics)
-    colors = [cmap(i) for i in range(n_metrics)]
-
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(25, 17))  # Larger figure size for clarity
-
-    for i, metric in enumerate(metrics):
-        offsets = y + i * height
-        ax.barh(offsets, df[metric], height=height, label=metric.replace("_", " ").title(), color=colors[i], edgecolor='black')
-    label_size = 55
-    # Set y-axis ticks and labels
-    ax.set_yticks(y + (n_metrics - 1) * height / 2)
-    ax.set_yticklabels(datasets, fontsize=label_size)
-
-    # Set axis labels and title
-    ax.set_ylabel('Datasets', fontsize=label_size, labelpad=15)
     
-    if scaling_method:
-        ax.set_xlabel(f'{scaling_method} Metric Values', fontsize=label_size, labelpad=15)
-    else:
-        ax.set_xlabel('Datasets', fontsize=label_size, labelpad=15)
-
-    # Add title
-    # ax.set_title(f'{title} {data_type}', fontsize=28, pad=20)
-
-    # Customize tick parameters
-    ax.tick_params(axis='x', labelsize=label_size)
-    ax.tick_params(axis='y', labelsize=label_size)
-
-    # Add legend
-    ax.legend(fontsize=38, title_fontsize=40, loc='lower right', frameon=True)
-    # ax.legend(title="Intersectional Metrics", fontsize=14, title_fontsize=18, loc='lower right', frameon=True)
-
-    # Add gridlines
-    ax.grid(True, linestyle='--', axis='x', alpha=0.6)
-
-    # Adjust layout and save the plot
-    plt.tight_layout()
-    plt.savefig(output_file, dpi=dpi, bbox_inches='tight')  # Ensure no clipping
-    plt.show()
-
-
-def plot_idd_decomposition(results):
-    """
-    Plots the IDD decomposition (subgroup, additive, intersectional) for each dataset.
-
-    Parameters
-    ----------
-    results : dict
-        Dictionary where keys are dataset names and values are dictionaries with keys
-        'idd_subgroups', 'idd_additive', 'idd_intersectional'.
-    """
-    labels = list(results.keys())
-    D_worst_disparity = [results[k]['idd_worst_disparity'] for k in labels]
-    D_additive = [results[k]['idd_additive'] for k in labels]
-    D_intersectional = [results[k]['idd_intersectional'] for k in labels]
-
-    x = range(len(labels))
-    width = 0.25
-
-    plt.figure(figsize=(10, 5))
-    plt.bar([p - width for p in x], D_worst_disparity, width, label='D_worst_disparity')
-    plt.bar(x, D_additive, width, label='D_additive')
-    plt.bar([p + width for p in x], D_intersectional, width, label='D_intersectional')
-
-    plt.xticks(x, labels, rotation=30, fontsize=20)
-    plt.ylabel('Disparity Value', fontsize=20)
-    plt.yticks(fontsize=20)
-    plt.title('IDD Decomposition Values', fontsize=25)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('idd_decomposition_values.pdf', dpi=800, bbox_inches='tight')  # Save with high resolution
-    plt.show()
 
 

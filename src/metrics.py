@@ -1,9 +1,6 @@
-import pandas as pd
 import numpy as np
-from utlis import get_subgroups
-
-
-
+import pandas as pd
+from helper import get_subgroups
 
 
 def compute_demographic_parity_ratio(df, sensitive_attributes, outcome_col):
@@ -50,8 +47,6 @@ def compute_elift(df, sensitive_attributes, outcome_col):
 
     epsilons = []
     for label, p_sg in subgroup_probs.items():
-        # if p_sg == 0 or p_sg == 1:
-        #     continue  
         eps = abs(np.log(p_sg / overall_rate))
         epsilons.append(eps)
     return max(epsilons), subgroup_probs
@@ -285,9 +280,6 @@ def compute_tpr_disparity(df, sensitive_attributes, outcome_col, predictions):
     return epsilon_tprs, subgroup_tprs
 
 
-
-
-
 def evaluation_data(df, sensitive_attributes, outcome_col):
     eval_subgroup_rates = {}
     metrics_results = {}
@@ -307,13 +299,12 @@ def evaluation_data(df, sensitive_attributes, outcome_col):
     subgroup_unfairness, subgroup_rates= compute_subgroup_unfairness(df, sensitive_attributes, outcome_col)
     metrics_results['subgroup_unfairness'] = subgroup_unfairness
     eval_subgroup_rates['subgroup_unfairness'] = subgroup_rates
-
+    
     return metrics_results, eval_subgroup_rates
     
 def evaluation_classifier(df, sensitive_attributes, outcome_col, prediction_col):
     eval_subgroup_rates = {}
     metrics_results = {}
-    
     
     subgroup_rates, dpr = compute_demographic_parity_ratio(df, sensitive_attributes, prediction_col)
     metrics_results['demographic_disparity'] = dpr
@@ -327,9 +318,9 @@ def evaluation_classifier(df, sensitive_attributes, outcome_col, prediction_col)
     metrics_results['group benefit'] = gbr
     eval_subgroup_rates['group benefit'] = subgroup_preds
     
-    smoothed_edf_probs, _ = compute_SmoothedEDF(df, sensitive_attributes, prediction_col)
+    smoothed_edf_probs, edf_subgroup_probs = compute_SmoothedEDF(df, sensitive_attributes, prediction_col)
     metrics_results['smoothed_edf'] = smoothed_edf_probs
-
+    eval_subgroup_rates['smoothed_edf'] = edf_subgroup_probs
 
     epsilon_tprs, subgroup_tprs = compute_tpr_disparity(df, sensitive_attributes, outcome_col, prediction_col)
     metrics_results['tpr disparity'] = epsilon_tprs
@@ -338,20 +329,17 @@ def evaluation_classifier(df, sensitive_attributes, outcome_col, prediction_col)
     epsilon_fprs, subgroup_fprs= compute_fpr_disparity(df, sensitive_attributes, outcome_col, prediction_col)
     metrics_results['fpr disparity'] = epsilon_fprs
     eval_subgroup_rates['fpr disparity'] = subgroup_fprs
+
     
-     
     epsilons_elift, elift_subgroup_probs= compute_elift(df, sensitive_attributes, prediction_col)
     metrics_results['elift'] = epsilons_elift
     eval_subgroup_rates['elift'] = elift_subgroup_probs
-    
-    # epsilons_slift, slift_subgroup_probs = compute_slift(df, sensitive_attributes, prediction_col)
-    # metrics_results['slift'] = epsilons_slift
-    # eval_subgroup_rates['slift'] = slift_subgroup_probs
+
     
     subgroup_unfairness, subgroup_rates= compute_subgroup_unfairness(df, sensitive_attributes, prediction_col)
     metrics_results['subgroup_unfairness'] = subgroup_unfairness
     eval_subgroup_rates['subgroup_unfairness'] = subgroup_rates
-
+    
     return metrics_results, eval_subgroup_rates
 
 

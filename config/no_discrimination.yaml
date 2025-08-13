@@ -1,0 +1,38 @@
+sample_size: 10000
+# random_seed: 42
+prob_gender: 0.5
+prob_race: 0.5
+beta: 0.03
+beta_I: 0.8
+beta_S: 0.6
+gamma: 0.0
+eta: 2.0
+delta: 0.45
+
+measure_bias_col: Gender
+thetas:
+  G: 0.0
+  R: 0.0
+  GR: 0.0
+beta_coef:
+  G: 0.0
+  R: 0.0
+  GR: 0.0
+rhos:
+  G: 0.0
+  R: 0.0
+  GR: 0.0
+kappas:
+  G: 0.0
+  R: 0.0
+  GR: 0.0
+nus:
+  G: 0.0
+  R: 0.0
+  GR: 0.0
+lambdas:
+  E: 1.0
+  I: 1.0
+  L: 1.0
+  D: -1.0
+  Y: 1.0

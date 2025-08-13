@@ -5,12 +5,22 @@ This paper examines whether current statistical metrics for intersectional fairn
 
 ## 🗂️ Repository Structure
 
-- `src/` — Source code for experiments and analyses
-- `notebooks/` — Interactive Jupyter notebooks for reproducing results
-- `generated_data/` — Generated data from our experiments
-- `images/` -  Figures from our experiments
+- `main.py` — Generate synthetic data for all scenarios and seeds
+- `config/` — YAML configuration files for each discrimination scenario  
+- `src/` — Core source code for experiments and analyses
+  - `data_generator.py` — Synthetic data generation logic
+  - `metrics.py` — Fairness metric implementations
+  - `model_fitting.py` — Classifier training and evaluation
+  - `run_analysis.py` — Main analysis pipeline
+  - `helper.py` — Utility functions and data processing
+  - `plots.py` — Visualization functions
+- `Notebooks/` — Interactive Jupyter notebooks for reproducing results
+  - `fairness_analyis.ipynb` — Main fairness analysis across multiple seeds
+  - `exploratory.ipynb` — Single-seed data exploration
+- `generated_data/` — Generated synthetic datasets (created by main.py)
+- `images/` — Generated plots and figures
 
-## Getting Started
+## 🚀 Quick Start
 
 1. **Clone the repository:**
     ```bash
@@ -20,11 +30,23 @@ This paper examines whether current statistical metrics for intersectional fairn
 
 2. **Install dependencies:**
     ```bash
-    pip install -r requirements.txt
+    pip install pandas numpy matplotlib seaborn scikit-learn statsmodels pyyaml jupyter
     ```
 
-3. **Run experiments:**
-    See instructions in the `notebooks/` directory for step-by-step guides.
+3. **Generate synthetic data:**
+    ```bash
+    python main.py
+    ```
+
+4. **Run fairness analysis:**
+    ```bash
+    jupyter notebook Notebooks/fairness_analyis.ipynb
+    ```
+
+5. **Explore individual scenarios:**
+    ```bash
+    jupyter notebook Notebooks/exploratory.ipynb
+    ```
 
 
 ## 📊 Key Experiments and Results
@@ -81,4 +103,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Note**: This research was conducted at Saarland University and represents work accepted at AIES 2025. The code is provided for reproducibility and to support further research in intersectional fairness.
